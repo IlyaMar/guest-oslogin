@@ -26,6 +26,7 @@
 #include <cstring>
 #include <iostream>
 #include <sstream>
+#include <fstream>
 #include <json_object.h>
 
 #if defined(__clang__) || __GNUC__ > 4 || \
@@ -1170,4 +1171,41 @@ bool ContinueSession(bool alt, const string& email, const string& user_token, co
 
   return ret;
 }
+
+const char * getMetadataServerUrl() {
+ // Metadata server URL.
+#ifdef CUSTOM_METADATA_ENDPOINT
+#define Q(x) #x
+#define QUOTE(x) Q(x)
+    const char * defaultUrl = "http://" QUOTE(CUSTOM_METADATA_ENDPOINT) "/computeMetadata/v1/oslogin/";
+#else
+    const char * defaultUrl = "http://169.254.169.254/computeMetadata/v1/oslogin/";
+#endif /* CUSTOM_METADATA_ENDPOINT */
+    std::ifstream ifs("/etc/google_oslogin.conf");
+    string endpointUrl;
+    if (!ifs.is_open()) {
+        return defaultUrl;     // no config, use hardcoded endpoint
+    }
+    string line;
+    std::getline(ifs, line);
+    if (line.empty())
+        return defaultUrl;
+    auto delimiterPos = line.find(":");
+    if (string::npos == delimiterPos)
+        return defaultUrl;
+    auto name = line.substr(0, delimiterPos);
+    if (name != "endpoint")
+        return defaultUrl;
+    size_t valueStartPos = line.find_first_not_of(" \t", delimiterPos + 1);
+    if (string::npos == valueStartPos)
+        return defaultUrl;
+    auto value = line.substr(valueStartPos);
+    if (!Regex::regex_match(value, Regex::regex("^[a-z0-9\\.]+(:[0-9]+)?$")))
+        return defaultUrl;
+    string endpoint = "http://" + value + "/computeMetadata/v1/oslogin/";
+    char * url = new char[endpoint.size() + 1]();
+    strncpy(url, endpoint.c_str(), endpoint.size() + 1);
+    return url;
+}
+const char * kMetadataServerUrl = getMetadataServerUrl();
 }  // namespace oslogin_utils

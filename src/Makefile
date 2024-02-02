@@ -4,6 +4,11 @@ TOPDIR = $(realpath ..)
 CPPFLAGS = -Iinclude -I/usr/include/json-c
 FLAGS = -fPIC -Wall -g
 FLAGS += -std=c++11
+
+ifneq ($(CUSTOM_METADATA_ENDPOINT),)
+FLAGS += -DCUSTOM_METADATA_ENDPOINT=$(CUSTOM_METADATA_ENDPOINT)
+endif
+
 CFLAGS = $(FLAGS) -Wstrict-prototypes
 CXXFLAGS = $(FLAGS)
 
