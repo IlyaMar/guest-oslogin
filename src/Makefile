@@ -3,6 +3,7 @@ TOPDIR = $(realpath ..)
 
 CPPFLAGS = -Iinclude -I/usr/include/json-c
 FLAGS = -fPIC -Wall -g
+FLAGS += -std=c++11
 CFLAGS = $(FLAGS) -Wstrict-prototypes
 CXXFLAGS = $(FLAGS)
 
